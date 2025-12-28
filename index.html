@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İSG Depo Stok Takip Sistemi</title>
+    <meta name="description" content="İş Sağlığı ve Güvenliği Depo Malzemeleri Stok Takip Uygulaması">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+</head>
+
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-icon">
+                    <i class="fas fa-hard-hat"></i>
+                </div>
+                <h1>İSG Depo Sistemi</h1>
+                <p>İş Sağlığı ve Güvenliği Stok Takip</p>
+            </div>
+            <form id="loginForm">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="username" placeholder="Kullanıcı Adı" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" placeholder="Şifre" required>
+                </div>
+                <div class="remember-me">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="rememberMe">
+                        <span class="checkmark"></span>
+                        <span class="remember-text">Beni Hatırla</span>
+                    </label>
+                </div>
+                <div id="loginError" class="error-message"></div>
+                <button type="submit" class="login-btn">
+                    <span>Giriş Yap</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="dashboard-container" style="display: none;">
+        <!-- Sidebar Overlay -->
+        <div id="sidebarOverlay" class="sidebar-overlay"></div>
+        
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo" onclick="navigateTo('welcome')" style="cursor: pointer;">
+                    <i class="fas fa-hard-hat"></i>
+                    <span>İSG Depo</span>
+                </div>
+                <button id="closeSidebar" class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <nav class="sidebar-nav" id="sidebarNav">
+                <div class="nav-item" data-page="envanter-giris">
+                    <span>Envanter Giriş</span>
+                </div>
+                <div class="nav-item" data-page="envanter-cikis">
+                    <span>Envanter Çıkış</span>
+                </div>
+                <div class="nav-item" data-page="kalan-stok">
+                    <span>Mevcut Stok</span>
+                </div>
+                <div class="nav-item" data-page="envanter-listesi">
+                    <span>Envanter Listesi</span>
+                </div>
+                <div class="nav-item" data-page="yillik-analiz">
+                    <span>Yıllık Analiz</span>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="currentUser">Admin</span>
+                </div>
+                <button id="logoutBtn" class="logout-btn" onclick="handleLogout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Çıkış Yap
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <button id="hamburgerBtn" class="hamburger-btn">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h2 id="pageTitle">Dashboard</h2>
+                <div class="header-actions">
+                    <button id="themeToggle" class="theme-toggle-btn" title="Tema Değiştir">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <span class="date-display" id="dateDisplay"></span>
+                </div>
+            </header>
+
+            <div class="content-area" id="contentArea">
+                <!-- Welcome Screen -->
+                <div id="welcomeScreen" class="welcome-screen">
+                    <div class="stats-grid">
+                        <div class="stat-card stat-card-primary" onclick="navigateTo('envanter-giris')">
+                            <div class="stat-icon"><i class="fa-solid fa-circle-arrow-up"></i></div>
+                            <div class="stat-info">
+                                <h3>Envanter Giriş</h3>
+                                <p>Stok Ekle</p>
+                            </div>
+                        </div>
+                        <div class="stat-card stat-card-primary" onclick="navigateTo('envanter-cikis')">
+                            <div class="stat-icon stat-icon-red"><i class="fa-solid fa-circle-arrow-down"></i></div>
+                            <div class="stat-info">
+                                <h3>Envanter Çıkış</h3>
+                                <p>Stok Çıkar</p>
+                            </div>
+                        </div>
+                        <div class="stat-card stat-card-info" onclick="navigateTo('kalan-stok')">
+                            <div class="stat-icon stat-icon-gray"><i class="fa-solid fa-boxes-stacked"></i></div>
+                            <div class="stat-info">
+                                <h3 id="totalStock">0</h3>
+                                <p>Mevcut Stok</p>
+                            </div>
+                        </div>
+                        <div class="stat-card stat-card-info" onclick="navigateTo('envanter-listesi')">
+                            <div class="stat-icon stat-icon-purple"><i class="fa-solid fa-clipboard-list"></i></div>
+                            <div class="stat-info">
+                                <h3 id="totalItems">0</h3>
+                                <p>Toplam Ürün</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order Alert - Shows items that need to be ordered -->
+                    <div id="orderAlert" class="order-alert" style="display: none;">
+                        <div class="order-alert-header">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <h3>Sipariş Gerekli</h3>
+                        </div>
+                        <p>Aşağıdaki ürünlerin stok seviyesi asgari stokunun altında:</p>
+                        <div id="orderAlertList" class="order-alert-list"></div>
+                        <button class="order-alert-btn"
+                            onclick="navigateTo('kalan-stok'); setTimeout(() => document.querySelector('[data-filter=order]').click(), 100);">
+                            <i class="fas fa-arrow-right"></i> Tümünü Gör
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Envanter Giriş Page -->
+                <div id="envanterGirisPage" class="page-content" style="display: none;">
+                    <div class="form-card">
+                        <form id="entryForm">
+                            <div class="form-group">
+                                <label for="entryCategory">Kategori</label>
+                                <select id="entryCategory" required>
+                                    <option value="">Kategori Seçin</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="entryItem">Malzeme</label>
+                                <select id="entryItem" required disabled>
+                                    <option value="">Önce kategori seçin</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="entryQuantity">Giriş Miktarı</label>
+                                    <input type="number" id="entryQuantity" min="1" value="1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="entryCurrentStock">Mevcut Stok</label>
+                                    <input type="number" id="entryCurrentStock" readonly value="0">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="entryNotes">Not (İsteğe Bağlı)</label>
+                                <textarea id="entryNotes" rows="2"
+                                    placeholder="Giriş hakkında not ekleyin..."></textarea>
+                            </div>
+                            <button type="submit" class="btn-primary btn-green">
+                                <i class="fas fa-plus"></i> Stok Girişi Yap
+                            </button>
+                        </form>
+                    </div>
+                    <div class="recent-transactions">
+                        <h3>Son Giriş İşlemleri</h3>
+                        <div id="recentEntries" class="transaction-list"></div>
+                    </div>
+                </div>
+
+                <!-- Envanter Çıkış Page -->
+                <div id="envanterCikisPage" class="page-content" style="display: none;">
+                    <div class="form-card">
+                        <form id="exitForm">
+                            <div class="form-group">
+                                <label for="exitCategory">Kategori</label>
+                                <select id="exitCategory" required>
+                                    <option value="">Kategori Seçin</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="exitItem">Malzeme</label>
+                                <select id="exitItem" required disabled>
+                                    <option value="">Önce kategori seçin</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="exitQuantity">Çıkış Miktarı</label>
+                                    <input type="number" id="exitQuantity" min="1" value="1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="exitCurrentStock">Mevcut Stok</label>
+                                    <input type="number" id="exitCurrentStock" readonly value="0">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="exitPerson">Teslim Alan Kişi</label>
+                                <input type="text" id="exitPerson" placeholder="İsim girin..." required>
+                            </div>
+                            <div class="form-group">
+                                <label for="exitNotes">Not (İsteğe Bağlı)</label>
+                                <textarea id="exitNotes" rows="2"
+                                    placeholder="Çıkış hakkında not ekleyin..."></textarea>
+                            </div>
+                            <button type="submit" class="btn-primary btn-red">
+                                <i class="fas fa-minus"></i> Stok Çıkışı Yap
+                            </button>
+                        </form>
+                    </div>
+                    <div class="recent-transactions">
+                        <h3>Son Çıkış İşlemleri</h3>
+                        <div id="recentExits" class="transaction-list"></div>
+                    </div>
+                </div>
+
+                <!-- Kalan Stok Page -->
+                <div id="kalanStokPage" class="page-content" style="display: none;">
+                    <div class="filter-bar">
+                        <button class="export-btn" onclick="exportToExcel()">
+                            <i class="fas fa-file-excel"></i> Excel'e Aktar
+                        </button>
+                                                <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="stockSearch" placeholder="Malzeme ara...">
+                        </div>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-filter="all">Tümü</button>
+                            <button class="filter-btn filter-order" data-filter="order">🔴 Sipariş Gerekli</button>
+                            <button class="filter-btn" data-filter="low">Düşük Stok</button>
+                            <button class="filter-btn" data-filter="out">Stokta Yok</button>
+                            <button class="filter-btn" data-filter="ok">Stokta Var</button>
+                        </div>
+                        <select id="categoryFilter" class="category-filter">
+                            <option value="all">Tüm Kategoriler</option>
+                        </select>
+                    </div>
+                    <div class="stock-table-container">
+                        <table class="stock-table" id="stockTable">
+                            <thead>
+                                <tr>
+                                    <th class="col-actions">İşlemler</th>
+                                    <th class="col-category">
+                                        <div class="th-content">
+                                            <span class="sortable" onclick="sortStockTable('category')">Kategori <i class="fas fa-sort"></i></span>
+                                            <input type="text" class="column-filter" id="filterCategory" placeholder="Filtrele..." oninput="applyColumnFilters()">
+                                        </div>
+                                    </th>
+                                    <th class="col-material">
+                                        <div class="th-content">
+                                            <span class="sortable" onclick="sortStockTable('itemName')">Malzeme <i class="fas fa-sort"></i></span>
+                                            <input type="text" class="column-filter" id="filterMaterial" placeholder="Filtrele..." oninput="applyColumnFilters()">
+                                        </div>
+                                    </th>
+                                    <th class="col-size">
+                                        <div class="th-content">
+                                            <span>Beden/Özellik</span>
+                                            <input type="text" class="column-filter" id="filterSize" placeholder="Filtrele..." oninput="applyColumnFilters()">
+                                        </div>
+                                    </th>
+                                    <th class="col-number">
+                                        <div class="th-content">
+                                            <span class="sortable" onclick="sortStockTable('minStock')">Asgari Stok <i class="fas fa-sort"></i></span>
+                                        </div>
+                                    </th>
+                                    <th class="col-number">
+                                        <div class="th-content">
+                                            <span class="sortable" onclick="sortStockTable('remaining')">Kalan <i class="fas fa-sort"></i></span>
+                                        </div>
+                                    </th>
+                                    <th class="col-number">
+                                        <div class="th-content">
+                                            <span class="sortable" onclick="sortStockTable('totalEntry')">Giriş <i class="fas fa-sort"></i></span>
+                                        </div>
+                                    </th>
+                                    <th class="col-number">
+                                        <div class="th-content">
+                                            <span class="sortable" onclick="sortStockTable('totalExit')">Çıkış <i class="fas fa-sort"></i></span>
+                                        </div>
+                                    </th>
+                                    <th class="col-note">Durum</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stockTableBody">
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="stockPagination">
+                        <button class="pagination-btn" id="prevPage" onclick="changeStockPage(-1)">
+                            <i class="fas fa-chevron-left"></i> Önceki
+                        </button>
+                        <span class="pagination-info" id="pageInfo">Sayfa 1 / 1</span>
+                        <button class="pagination-btn" id="nextPage" onclick="changeStockPage(1)">
+                            Sonraki <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Envanter Listesi Page -->
+                <div id="envanterListesiPage" class="page-content" style="display: none;">
+                    <div class="filter-bar">
+                        <button class="export-btn" onclick="exportToExcel()">
+                            <i class="fas fa-file-excel"></i> Excel'e Aktar
+                        </button>
+                                                <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="listSearch" placeholder="İşlem ara...">
+                        </div>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-filter="all">Tümü</button>
+                            <button class="filter-btn" data-filter="entry">Girişler</button>
+                            <button class="filter-btn" data-filter="exit">Çıkışlar</button>
+                        </div>
+                    </div>
+                    <div id="transactionTable" class="transaction-table-container">
+                        <table class="transaction-table">
+                            <thead>
+                                <tr>
+                                    <th>Tarih</th>
+                                    <th>İşlem</th>
+                                    <th>Kategori</th>
+                                    <th>Malzeme</th>
+                                    <th>Miktar</th>
+                                    <th>Kişi</th>
+                                    <th>Not</th>
+                                    <th>Sil</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Yıllık Analiz Page -->
+                <div id="yillikAnalizPage" class="page-content" style="display: none;">
+                    <div class="analysis-filters">
+                        <div class="year-selector">
+                            <label for="analysisYear">Yıl Seçin:</label>
+                            <select id="analysisYear" onchange="updateAnalysisCharts()">
+                                <!-- Years will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <button class="export-btn" onclick="exportAnalysisReport()">
+                            <i class="fas fa-file-excel"></i> Excel Rapor İndir
+                        </button>
+                    </div>
+
+                    <div class="analysis-summary">
+                        <div class="summary-card summary-entry">
+                            <div class="summary-icon"><i class="fas fa-arrow-down"></i></div>
+                            <div class="summary-info">
+                                <h3 id="totalYearEntry">0</h3>
+                                <p>Toplam Giriş</p>
+                            </div>
+                        </div>
+                        <div class="summary-card summary-exit">
+                            <div class="summary-icon"><i class="fas fa-arrow-up"></i></div>
+                            <div class="summary-info">
+                                <h3 id="totalYearExit">0</h3>
+                                <p>Toplam Çıkış</p>
+                            </div>
+                        </div>
+                        <div class="summary-card summary-balance">
+                            <div class="summary-icon"><i class="fas fa-balance-scale"></i></div>
+                            <div class="summary-info">
+                                <h3 id="yearBalance">0</h3>
+                                <p>Net Değişim</p>
+                            </div>
+                        </div>
+                        <div class="summary-card summary-transactions">
+                            <div class="summary-icon"><i class="fas fa-exchange-alt"></i></div>
+                            <div class="summary-info">
+                                <h3 id="totalYearTransactions">0</h3>
+                                <p>Toplam İşlem</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="charts-container charts-three-col">
+                        <div class="chart-card">
+                            <h3><i class="fas fa-chart-pie"></i> Kategorilere Göre Giriş</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="entryPieChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3><i class="fas fa-chart-pie"></i> Kategorilere Göre Çıkış</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="exitPieChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3><i class="fas fa-chart-bar"></i> Aylık Giriş/Çıkış</h3>
+                            <div class="chart-wrapper-bar">
+                                <canvas id="monthlyBarChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+        <!-- Edit Stock Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Stok Düzenle</h3>
+                <button class="close-modal" onclick="closeEditModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="editStockForm">
+                    <input type="hidden" id="editItemOriginalName">
+                    <div class="form-group">
+                        <label for="editCategory">Kategori</label>
+                        <input type="text" id="editCategory" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editItemName">Malzeme Adı</label>
+                        <input type="text" id="editItemName" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editMinStock">Asgari Stok</label>
+                            <input type="number" id="editMinStock" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editInitialStock">Başlangıç Stok</label>
+                            <input type="number" id="editInitialStock" min="0" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editTotalEntry">Toplam Giriş</label>
+                            <input type="number" id="editTotalEntry" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editTotalExit">Toplam Çıkış</label>
+                            <input type="number" id="editTotalExit" min="0" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-primary btn-red" onclick="closeEditModal()">İptal</button>
+                        <button type="submit" class="btn-primary btn-green">Kaydet</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Success Toast -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">İşlem başarılı!</span>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
