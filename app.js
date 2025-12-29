@@ -1,10 +1,9 @@
 // ===== İSG Depo Stok Takip Sistemi - Excel Tabanlı =====
 
 // Admin Users
-const ADMIN_USERS = [
-    { username: 'elifkuscu', password: 'Elifdevrim34' },
-    { username: 'gurkanvural', password: 'Sirius3455' }
-];
+// Admin Users
+// ADMIN_USERS is defined in config.js
+
 
 // Initial Stock Data from Excel (Başlangıç Stok values)
 // Düzeltilmiş veriler - Excel'den alınan doğru değerler
@@ -220,7 +219,7 @@ function initializeApp() {
 
     // Update stats
     updateStats();
-    
+
     // Initialize theme
     initializeTheme();
 }
@@ -230,12 +229,12 @@ function initializeStockData() {
     // Mevcut giriş/çıkış verilerini koru
     const existingData = localStorage.getItem('isg_stock_v2');
     const existingStock = existingData ? JSON.parse(existingData) : {};
-    
+
     const stock = {};
     INITIAL_STOCK_DATA.forEach((item, index) => {
         const key = `${item.colorClass}_${item.item}_${item.size}`;
         const existing = existingStock[key];
-        
+
         stock[key] = {
             id: index,
             category: item.category,
@@ -277,7 +276,7 @@ function setupEventListeners() {
     // Sidebar toggle
     hamburgerBtn.addEventListener('click', toggleSidebar);
     closeSidebar.addEventListener('click', toggleSidebar);
-    
+
     // Theme toggle (only if element exists)
     const themeToggleBtn = document.getElementById('themeToggle');
     if (themeToggleBtn) {
@@ -338,28 +337,28 @@ function setupEventListeners() {
             }
         }
     });
-    
+
     // Close/collapse sidebar when clicking on main content area
     const mainContent = document.querySelector('.main-content');
     if (mainContent) {
         mainContent.addEventListener('click', (e) => {
             // Don't close if clicking on hamburger button
             if (hamburgerBtn.contains(e.target)) return;
-            
+
             // Mobile: close open sidebar
             if (window.innerWidth <= 1024 && sidebar.classList.contains('open')) {
                 sidebar.classList.remove('open');
                 const overlay = document.getElementById('sidebarOverlay');
                 if (overlay) overlay.classList.remove('active');
             }
-            
+
             // Desktop: collapse sidebar if not already collapsed
             if (window.innerWidth > 1024 && !sidebar.classList.contains('collapsed')) {
                 sidebar.classList.add('collapsed');
             }
         });
     }
-    
+
     // Sidebar overlay click to close
     const sidebarOverlay = document.getElementById('sidebarOverlay');
     if (sidebarOverlay) {
@@ -383,7 +382,7 @@ function handleLogin(e) {
     if (user) {
         currentUser = username;
         localStorage.setItem('isg_currentUser', username);
-        
+
         // Beni Hatırla seçiliyse kullanıcı bilgilerini kaydet
         if (rememberMe) {
             localStorage.setItem('isg_savedUsername', username);
@@ -394,7 +393,7 @@ function handleLogin(e) {
             localStorage.removeItem('isg_savedPassword');
             localStorage.removeItem('isg_rememberMe');
         }
-        
+
         loginError.classList.remove('show');
         showDashboard();
     } else {
@@ -408,7 +407,7 @@ function handleLogout() {
     localStorage.removeItem('isg_currentUser');
     loginPage.style.display = 'flex';
     dashboard.style.display = 'none';
-    
+
     // Beni Hatırla seçili değilse alanları temizle
     if (localStorage.getItem('isg_rememberMe') !== 'true') {
         document.getElementById('username').value = '';
@@ -420,7 +419,7 @@ function loadSavedCredentials() {
     if (localStorage.getItem('isg_rememberMe') === 'true') {
         const savedUsername = localStorage.getItem('isg_savedUsername');
         const savedPassword = localStorage.getItem('isg_savedPassword');
-        
+
         if (savedUsername) document.getElementById('username').value = savedUsername;
         if (savedPassword) document.getElementById('password').value = savedPassword;
         document.getElementById('rememberMe').checked = true;
@@ -860,13 +859,13 @@ function renderStockTable() {
         items.sort((a, b) => {
             let aVal = a[stockSortColumn];
             let bVal = b[stockSortColumn];
-            
+
             // Handle string comparison
             if (typeof aVal === 'string') {
                 aVal = aVal.toLocaleLowerCase('tr-TR');
                 bVal = bVal.toLocaleLowerCase('tr-TR');
             }
-            
+
             if (aVal < bVal) return stockSortDirection === 'asc' ? -1 : 1;
             if (aVal > bVal) return stockSortDirection === 'asc' ? 1 : -1;
             return 0;
@@ -875,11 +874,11 @@ function renderStockTable() {
 
     // Store filtered items for pagination
     stockFilteredItems = items;
-    
+
     // Calculate pagination
     const totalPages = Math.ceil(items.length / stockItemsPerPage);
     if (stockCurrentPage > totalPages) stockCurrentPage = 1;
-    
+
     const startIndex = (stockCurrentPage - 1) * stockItemsPerPage;
     const endIndex = startIndex + stockItemsPerPage;
     const paginatedItems = items.slice(startIndex, endIndex);
@@ -936,7 +935,7 @@ function updateStockPagination(totalPages, totalItems) {
     const pageInfo = document.getElementById('pageInfo');
     const prevBtn = document.getElementById('prevPage');
     const nextBtn = document.getElementById('nextPage');
-    
+
     if (totalItems === 0) {
         pageInfo.textContent = 'Sonuç yok';
         prevBtn.disabled = true;
@@ -951,7 +950,7 @@ function updateStockPagination(totalPages, totalItems) {
 function changeStockPage(direction) {
     const totalPages = Math.ceil(stockFilteredItems.length / stockItemsPerPage);
     const newPage = stockCurrentPage + direction;
-    
+
     if (newPage >= 1 && newPage <= totalPages) {
         stockCurrentPage = newPage;
         renderStockTable();
@@ -980,7 +979,7 @@ function applyColumnFilters() {
     columnFilters.category = (document.getElementById('filterCategory')?.value || '').toLocaleLowerCase('tr-TR');
     columnFilters.itemName = (document.getElementById('filterMaterial')?.value || '').toLocaleLowerCase('tr-TR');
     columnFilters.size = (document.getElementById('filterSize')?.value || '').toLocaleLowerCase('tr-TR');
-    
+
     stockCurrentPage = 1;
     renderStockTable();
 }
@@ -993,7 +992,7 @@ function sortStockTable(column) {
         stockSortColumn = column;
         stockSortDirection = 'asc';
     }
-    
+
     stockCurrentPage = 1;
     renderStockTable();
 }
@@ -1319,11 +1318,11 @@ function initializeTheme() {
 function toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
+
     document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem('isg_theme', newTheme);
     updateThemeIcon(newTheme);
-    
+
     showToast(newTheme === 'dark' ? 'Karanlık mod aktif' : 'Aydınlık mod aktif', 'success');
 }
 
@@ -1352,21 +1351,21 @@ function initializeAnalysisPage() {
 function populateYearSelector() {
     const yearSelect = document.getElementById('analysisYear');
     const transactions = getTransactions();
-    
+
     // Get unique years from transactions
     const years = new Set();
     const currentYear = new Date().getFullYear();
     years.add(currentYear); // Always include current year
-    
+
     transactions.forEach(t => {
         const year = new Date(t.date).getFullYear();
         years.add(year);
     });
-    
+
     // Sort years descending
     const sortedYears = Array.from(years).sort((a, b) => b - a);
-    
-    yearSelect.innerHTML = sortedYears.map(year => 
+
+    yearSelect.innerHTML = sortedYears.map(year =>
         `<option value="${year}" ${year === currentYear ? 'selected' : ''}>${year}</option>`
     ).join('');
 }
@@ -1374,44 +1373,44 @@ function populateYearSelector() {
 function updateAnalysisCharts() {
     const selectedYear = parseInt(document.getElementById('analysisYear').value);
     const transactions = getTransactions();
-    
+
     // Filter transactions by year
     const yearTransactions = transactions.filter(t => {
         const transYear = new Date(t.date).getFullYear();
         return transYear === selectedYear;
     });
-    
+
     // Calculate totals
     const entryTransactions = yearTransactions.filter(t => t.type === 'entry');
     const exitTransactions = yearTransactions.filter(t => t.type === 'exit');
-    
+
     const totalEntry = entryTransactions.reduce((sum, t) => sum + t.quantity, 0);
     const totalExit = exitTransactions.reduce((sum, t) => sum + t.quantity, 0);
-    
+
     // Update summary cards
     document.getElementById('totalYearEntry').textContent = totalEntry;
     document.getElementById('totalYearExit').textContent = totalExit;
     document.getElementById('yearBalance').textContent = (totalEntry - totalExit >= 0 ? '+' : '') + (totalEntry - totalExit);
     document.getElementById('totalYearTransactions').textContent = yearTransactions.length;
-    
+
     // Prepare data for pie charts
     const entryByCategory = {};
     const exitByCategory = {};
-    
+
     entryTransactions.forEach(t => {
         entryByCategory[t.categoryName] = (entryByCategory[t.categoryName] || 0) + t.quantity;
     });
-    
+
     exitTransactions.forEach(t => {
         exitByCategory[t.categoryName] = (exitByCategory[t.categoryName] || 0) + t.quantity;
     });
-    
+
     // Prepare monthly data
     const monthlyData = {
         entry: new Array(12).fill(0),
         exit: new Array(12).fill(0)
     };
-    
+
     yearTransactions.forEach(t => {
         const month = new Date(t.date).getMonth();
         if (t.type === 'entry') {
@@ -1420,26 +1419,26 @@ function updateAnalysisCharts() {
             monthlyData.exit[month] += t.quantity;
         }
     });
-    
+
     // Render charts
     renderEntryPieChart(entryByCategory);
     renderExitPieChart(exitByCategory);
     renderMonthlyBarChart(monthlyData);
-    
+
     // Render top items
     renderTopItems(entryTransactions, exitTransactions);
 }
 
 function renderEntryPieChart(data) {
     const ctx = document.getElementById('entryPieChart').getContext('2d');
-    
+
     if (entryPieChart) {
         entryPieChart.destroy();
     }
-    
+
     const labels = Object.keys(data);
     const values = Object.values(data);
-    
+
     if (labels.length === 0) {
         entryPieChart = new Chart(ctx, {
             type: 'doughnut',
@@ -1460,7 +1459,7 @@ function renderEntryPieChart(data) {
         });
         return;
     }
-    
+
     entryPieChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -1490,7 +1489,7 @@ function renderEntryPieChart(data) {
                 },
                 tooltip: {
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             const total = context.dataset.data.reduce((a, b) => a + b, 0);
                             const percentage = ((context.raw / total) * 100).toFixed(1);
                             return `${context.label}: ${context.raw} adet (${percentage}%)`;
@@ -1504,14 +1503,14 @@ function renderEntryPieChart(data) {
 
 function renderExitPieChart(data) {
     const ctx = document.getElementById('exitPieChart').getContext('2d');
-    
+
     if (exitPieChart) {
         exitPieChart.destroy();
     }
-    
+
     const labels = Object.keys(data);
     const values = Object.values(data);
-    
+
     if (labels.length === 0) {
         exitPieChart = new Chart(ctx, {
             type: 'doughnut',
@@ -1532,7 +1531,7 @@ function renderExitPieChart(data) {
         });
         return;
     }
-    
+
     exitPieChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -1562,7 +1561,7 @@ function renderExitPieChart(data) {
                 },
                 tooltip: {
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             const total = context.dataset.data.reduce((a, b) => a + b, 0);
                             const percentage = ((context.raw / total) * 100).toFixed(1);
                             return `${context.label}: ${context.raw} adet (${percentage}%)`;
@@ -1576,14 +1575,14 @@ function renderExitPieChart(data) {
 
 function renderMonthlyBarChart(data) {
     const ctx = document.getElementById('monthlyBarChart').getContext('2d');
-    
+
     if (monthlyBarChart) {
         monthlyBarChart.destroy();
     }
-    
-    const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 
-                    'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
-    
+
+    const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+        'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+
     monthlyBarChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -1640,26 +1639,26 @@ function renderTopItems(entryTransactions, exitTransactions) {
     // Aggregate by item
     const entryByItem = {};
     const exitByItem = {};
-    
+
     entryTransactions.forEach(t => {
         const key = `${t.itemName}|||${t.categoryName}`;
         entryByItem[key] = (entryByItem[key] || 0) + t.quantity;
     });
-    
+
     exitTransactions.forEach(t => {
         const key = `${t.itemName}|||${t.categoryName}`;
         exitByItem[key] = (exitByItem[key] || 0) + t.quantity;
     });
-    
+
     // Sort and get top 5
     const topEntry = Object.entries(entryByItem)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5);
-    
+
     const topExit = Object.entries(exitByItem)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5);
-    
+
     // Render entry list
     const entryContainer = document.getElementById('topEntryItems');
     if (topEntry.length === 0) {
@@ -1680,7 +1679,7 @@ function renderTopItems(entryTransactions, exitTransactions) {
             `;
         }).join('');
     }
-    
+
     // Render exit list
     const exitContainer = document.getElementById('topExitItems');
     if (topExit.length === 0) {
@@ -1706,20 +1705,20 @@ function renderTopItems(entryTransactions, exitTransactions) {
 function exportAnalysisReport() {
     const selectedYear = document.getElementById('analysisYear').value;
     const transactions = getTransactions();
-    
+
     // Filter by year
     const yearTransactions = transactions.filter(t => {
         return new Date(t.date).getFullYear() === parseInt(selectedYear);
     });
-    
+
     const entryTransactions = yearTransactions.filter(t => t.type === 'entry');
     const exitTransactions = yearTransactions.filter(t => t.type === 'exit');
     const entryTotal = entryTransactions.reduce((s, t) => s + t.quantity, 0);
     const exitTotal = exitTransactions.reduce((s, t) => s + t.quantity, 0);
-    
+
     // Create workbook
     const wb = XLSX.utils.book_new();
-    
+
     // Sheet 1: Özet
     const summaryData = [
         ['İSG DEPO YILLIK RAPOR - ' + selectedYear],
@@ -1735,13 +1734,13 @@ function exportAnalysisReport() {
     const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
     summarySheet['!cols'] = [{ wch: 20 }, { wch: 15 }, { wch: 10 }];
     XLSX.utils.book_append_sheet(wb, summarySheet, 'Özet');
-    
+
     // Sheet 2: Kategorilere Göre Giriş (Pasta Grafik Verisi)
     const entryByCategory = {};
     entryTransactions.forEach(t => {
         entryByCategory[t.categoryName] = (entryByCategory[t.categoryName] || 0) + t.quantity;
     });
-    
+
     const entryPieData = [['Kategori', 'Giriş Miktarı', 'Yüzde (%)']];
     const entryTotalForPercent = Object.values(entryByCategory).reduce((a, b) => a + b, 0) || 1;
     Object.entries(entryByCategory).sort((a, b) => b[1] - a[1]).forEach(([cat, qty]) => {
@@ -1749,17 +1748,17 @@ function exportAnalysisReport() {
     });
     entryPieData.push(['', '', '']);
     entryPieData.push(['TOPLAM', entryTotal, '100%']);
-    
+
     const entryPieSheet = XLSX.utils.aoa_to_sheet(entryPieData);
     entryPieSheet['!cols'] = [{ wch: 35 }, { wch: 15 }, { wch: 12 }];
     XLSX.utils.book_append_sheet(wb, entryPieSheet, 'Giriş - Kategori Dağılımı');
-    
+
     // Sheet 3: Kategorilere Göre Çıkış (Pasta Grafik Verisi)
     const exitByCategory = {};
     exitTransactions.forEach(t => {
         exitByCategory[t.categoryName] = (exitByCategory[t.categoryName] || 0) + t.quantity;
     });
-    
+
     const exitPieData = [['Kategori', 'Çıkış Miktarı', 'Yüzde (%)']];
     const exitTotalForPercent = Object.values(exitByCategory).reduce((a, b) => a + b, 0) || 1;
     Object.entries(exitByCategory).sort((a, b) => b[1] - a[1]).forEach(([cat, qty]) => {
@@ -1767,17 +1766,17 @@ function exportAnalysisReport() {
     });
     exitPieData.push(['', '', '']);
     exitPieData.push(['TOPLAM', exitTotal, '100%']);
-    
+
     const exitPieSheet = XLSX.utils.aoa_to_sheet(exitPieData);
     exitPieSheet['!cols'] = [{ wch: 35 }, { wch: 15 }, { wch: 12 }];
     XLSX.utils.book_append_sheet(wb, exitPieSheet, 'Çıkış - Kategori Dağılımı');
-    
+
     // Sheet 4: Aylık Veriler
-    const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 
-                    'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+    const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+        'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
     const monthlyEntry = new Array(12).fill(0);
     const monthlyExit = new Array(12).fill(0);
-    
+
     yearTransactions.forEach(t => {
         const month = new Date(t.date).getMonth();
         if (t.type === 'entry') {
@@ -1786,25 +1785,25 @@ function exportAnalysisReport() {
             monthlyExit[month] += t.quantity;
         }
     });
-    
+
     const monthlyData = [['Ay', 'Giriş', 'Çıkış', 'Net']];
     months.forEach((month, i) => {
         monthlyData.push([month, monthlyEntry[i], monthlyExit[i], monthlyEntry[i] - monthlyExit[i]]);
     });
     monthlyData.push(['', '', '', '']);
     monthlyData.push(['TOPLAM', entryTotal, exitTotal, entryTotal - exitTotal]);
-    
+
     const monthlySheet = XLSX.utils.aoa_to_sheet(monthlyData);
     monthlySheet['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 10 }];
     XLSX.utils.book_append_sheet(wb, monthlySheet, 'Aylık Veriler');
-    
+
     // Sheet 5: En Çok Giriş Yapılan Malzemeler
     const entryByItem = {};
     entryTransactions.forEach(t => {
         const key = `${t.itemName}|||${t.categoryName}`;
         entryByItem[key] = (entryByItem[key] || 0) + t.quantity;
     });
-    
+
     const topEntryData = [['Sıra', 'Malzeme', 'Kategori', 'Giriş Miktarı']];
     Object.entries(entryByItem)
         .sort((a, b) => b[1] - a[1])
@@ -1813,18 +1812,18 @@ function exportAnalysisReport() {
             const [itemName, categoryName] = key.split('|||');
             topEntryData.push([i + 1, itemName, categoryName, qty]);
         });
-    
+
     const topEntrySheet = XLSX.utils.aoa_to_sheet(topEntryData);
     topEntrySheet['!cols'] = [{ wch: 6 }, { wch: 35 }, { wch: 30 }, { wch: 15 }];
     XLSX.utils.book_append_sheet(wb, topEntrySheet, 'Top 10 Giriş');
-    
+
     // Sheet 6: En Çok Çıkış Yapılan Malzemeler
     const exitByItem = {};
     exitTransactions.forEach(t => {
         const key = `${t.itemName}|||${t.categoryName}`;
         exitByItem[key] = (exitByItem[key] || 0) + t.quantity;
     });
-    
+
     const topExitData = [['Sıra', 'Malzeme', 'Kategori', 'Çıkış Miktarı']];
     Object.entries(exitByItem)
         .sort((a, b) => b[1] - a[1])
@@ -1833,11 +1832,11 @@ function exportAnalysisReport() {
             const [itemName, categoryName] = key.split('|||');
             topExitData.push([i + 1, itemName, categoryName, qty]);
         });
-    
+
     const topExitSheet = XLSX.utils.aoa_to_sheet(topExitData);
     topExitSheet['!cols'] = [{ wch: 6 }, { wch: 35 }, { wch: 30 }, { wch: 15 }];
     XLSX.utils.book_append_sheet(wb, topExitSheet, 'Top 10 Çıkış');
-    
+
     // Sheet 7: Tüm İşlemler
     const allTransactionsData = [['Tarih', 'İşlem Tipi', 'Kategori', 'Malzeme', 'Miktar', 'Teslim Alan', 'Not']];
     yearTransactions.forEach(t => {
@@ -1851,16 +1850,16 @@ function exportAnalysisReport() {
             t.notes || '-'
         ]);
     });
-    
+
     const allTransactionsSheet = XLSX.utils.aoa_to_sheet(allTransactionsData);
     allTransactionsSheet['!cols'] = [
         { wch: 12 }, { wch: 10 }, { wch: 30 }, { wch: 35 }, { wch: 10 }, { wch: 20 }, { wch: 30 }
     ];
     XLSX.utils.book_append_sheet(wb, allTransactionsSheet, 'Tüm İşlemler');
-    
+
     // Download Excel file
     XLSX.writeFile(wb, `ISG_Depo_Yillik_Rapor_${selectedYear}.xlsx`);
-    
+
     showToast(`${selectedYear} yılı Excel raporu indirildi!`, 'success');
 }
 
