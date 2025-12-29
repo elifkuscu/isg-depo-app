@@ -271,8 +271,7 @@ function initializeApp() {
 }
 
 function initializeStockData() {
-    // Her zaman INITIAL_STOCK_DATA'dan yeniden oluştur
-    // Mevcut giriş/çıkış verilerini koru
+    // Check local storage
     const existingData = localStorage.getItem('isg_stock_v2');
     const existingStock = existingData ? JSON.parse(existingData) : {};
 
@@ -281,19 +280,29 @@ function initializeStockData() {
         const key = `${item.colorClass}_${item.item}_${item.size}`;
         const existing = existingStock[key];
 
-        stock[key] = {
-            id: index,
-            category: item.category,
-            colorClass: item.colorClass,
-            itemName: item.item,
-            size: item.size,
-            minStock: item.minStock,
-            initialStock: item.initialStock,
-            // Mevcut giriş/çıkış verilerini koru, yoksa 0
-            totalEntry: existing ? existing.totalEntry : 0,
-            totalExit: existing ? existing.totalExit : 0
-        };
+        if (existing) {
+            // Preservation Mode: Keep EVERYTHING user changed (name, minStock, etc.)
+            stock[key] = existing;
+        } else {
+            // Creation Mode: New item from defaults
+            stock[key] = {
+                id: index,
+                category: item.category,
+                colorClass: item.colorClass,
+                itemName: item.item,
+                size: item.size,
+                minStock: item.minStock,
+                initialStock: item.initialStock,
+                totalEntry: 0,
+                totalExit: 0
+            };
+        }
     });
+
+    // Also preserve items that might have been added dynamically (if any), 
+    // though currently app relies on CONSTANT structure. 
+    // If we wanted to support custom items, we would merge keys from existingStock that are NOT in INITIAL_STOCK_DATA.
+
     localStorage.setItem('isg_stock_v2', JSON.stringify(stock));
 }
 
