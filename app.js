@@ -1,6 +1,52 @@
 // ===== İSG Depo Stok Takip Sistemi - Excel Tabanlı =====
 
-// Admin Users
+// Security Utilities
+async function hashPassword(password) {
+    const textEncoder = new TextEncoder();
+    const data = textEncoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function escapeHtml(unsafe) {
+    if (typeof unsafe !== 'string') return unsafe;
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 5 * 60 * 1000; // 5 minutes
+
+function recordFailedLogin() {
+    let failures = JSON.parse(localStorage.getItem('isg_loginFailures') || '[]');
+    failures.push(Date.now());
+    failures = failures.filter(timestamp => Date.now() - timestamp < LOCKOUT_DURATION_MS);
+    localStorage.setItem('isg_loginFailures', JSON.stringify(failures));
+}
+
+function resetLoginFailures() {
+    localStorage.removeItem('isg_loginFailures');
+}
+
+function checkLoginLockout() {
+    const failures = JSON.parse(localStorage.getItem('isg_loginFailures') || '[]');
+    const recentFailures = failures.filter(timestamp => Date.now() - timestamp < LOCKOUT_DURATION_MS);
+
+    if (recentFailures.length >= MAX_LOGIN_ATTEMPTS) {
+        const firstFailureTime = recentFailures[0];
+        const timeElapsed = Date.now() - firstFailureTime;
+        const timeLeft = LOCKOUT_DURATION_MS - timeElapsed;
+        const minutesLeft = Math.ceil(timeLeft / (60 * 1000));
+        return `Çok fazla hatalı giriş denemesi. Lütfen ${minutesLeft} dakika sonra tekrar deneyin.`;
+    }
+    return null;
+}
+
 // Admin Users
 // ADMIN_USERS is defined in config.js
 
@@ -369,34 +415,52 @@ function setupEventListeners() {
     }
 }
 
+
+
 // ===== Authentication =====
-function handleLogin(e) {
+async function handleLogin(e) {
     e.preventDefault();
+
+    const lockoutMsg = checkLoginLockout();
+    if (lockoutMsg) {
+        loginError.textContent = lockoutMsg;
+        loginError.classList.add('show');
+        return;
+    }
 
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
     const rememberMe = document.getElementById('rememberMe').checked;
 
-    const user = ADMIN_USERS.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
+    // Password Hashing Check
+    const hashedPassword = await hashPassword(password);
+    const user = ADMIN_USERS.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === hashedPassword);
 
     if (user) {
+        resetLoginFailures();
         currentUser = username;
         localStorage.setItem('isg_currentUser', username);
 
         // Beni Hatırla seçiliyse kullanıcı bilgilerini kaydet
         if (rememberMe) {
             localStorage.setItem('isg_savedUsername', username);
-            localStorage.setItem('isg_savedPassword', password);
+            // Not safe to store plain password, but keeping existing behavior for user convenience 
+            // (ideally should use token, but this is static site).
+            // We will store the HASH to autofill (requires logic change) or skip password autofill.
+            // For security, let's stop saving password in local storage.
             localStorage.setItem('isg_rememberMe', 'true');
         } else {
             localStorage.removeItem('isg_savedUsername');
-            localStorage.removeItem('isg_savedPassword');
             localStorage.removeItem('isg_rememberMe');
         }
+
+        // Clear sensitive fields
+        document.getElementById('password').value = '';
 
         loginError.classList.remove('show');
         showDashboard();
     } else {
+        recordFailedLogin();
         loginError.textContent = 'Kullanıcı adı veya şifre hatalı!';
         loginError.classList.add('show');
     }
@@ -409,19 +473,18 @@ function handleLogout() {
     dashboard.style.display = 'none';
 
     // Beni Hatırla seçili değilse alanları temizle
+    // Beni Hatırla seçili değilse alanları temizle
     if (localStorage.getItem('isg_rememberMe') !== 'true') {
         document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
     }
+    document.getElementById('password').value = '';
 }
 
 function loadSavedCredentials() {
     if (localStorage.getItem('isg_rememberMe') === 'true') {
         const savedUsername = localStorage.getItem('isg_savedUsername');
-        const savedPassword = localStorage.getItem('isg_savedPassword');
 
         if (savedUsername) document.getElementById('username').value = savedUsername;
-        if (savedPassword) document.getElementById('password').value = savedPassword;
         document.getElementById('rememberMe').checked = true;
     }
 }
@@ -756,8 +819,8 @@ function renderRecentEntries() {
                 <i class="fas fa-plus"></i>
             </div>
             <div class="transaction-details">
-                <div class="transaction-title">${t.itemName}</div>
-                <div class="transaction-meta">${t.categoryName} • ${formatDate(t.date)}</div>
+                <div class="transaction-title">${escapeHtml(t.itemName)}</div>
+                <div class="transaction-meta">${escapeHtml(t.categoryName)} • ${formatDate(t.date)}</div>
             </div>
             <div class="transaction-amount positive">+${t.quantity}</div>
             <button class="delete-transaction-btn" onclick="deleteTransaction(${t.id})" title="İşlemi Sil">
@@ -782,8 +845,8 @@ function renderRecentExits() {
                 <i class="fas fa-minus"></i>
             </div>
             <div class="transaction-details">
-                <div class="transaction-title">${t.itemName}</div>
-                <div class="transaction-meta">${t.categoryName} • ${t.person} • ${formatDate(t.date)}</div>
+                <div class="transaction-title">${escapeHtml(t.itemName)}</div>
+                <div class="transaction-meta">${escapeHtml(t.categoryName)} • ${escapeHtml(t.person)} • ${formatDate(t.date)}</div>
             </div>
             <div class="transaction-amount negative">-${t.quantity}</div>
             <button class="delete-transaction-btn" onclick="deleteTransaction(${t.id})" title="İşlemi Sil">

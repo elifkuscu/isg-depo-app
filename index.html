@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>İSG Depo Stok Takip Sistemi</title>
     <meta name="description" content="İş Sağlığı ve Güvenliği Depo Malzemeleri Stok Takip Uygulaması">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:;">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -53,7 +55,7 @@
     <div id="dashboard" class="dashboard-container" style="display: none;">
         <!-- Sidebar Overlay -->
         <div id="sidebarOverlay" class="sidebar-overlay"></div>
-        
+
         <!-- Sidebar -->
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
@@ -252,7 +254,7 @@
                         <button class="export-btn" onclick="exportToExcel()">
                             <i class="fas fa-file-excel"></i> Excel'e Aktar
                         </button>
-                                                <div class="search-box">
+                        <div class="search-box">
                             <i class="fas fa-search"></i>
                             <input type="text" id="stockSearch" placeholder="Malzeme ara...">
                         </div>
@@ -274,40 +276,49 @@
                                     <th class="col-actions">İşlemler</th>
                                     <th class="col-category">
                                         <div class="th-content">
-                                            <span class="sortable" onclick="sortStockTable('category')">Kategori <i class="fas fa-sort"></i></span>
-                                            <input type="text" class="column-filter" id="filterCategory" placeholder="Filtrele..." oninput="applyColumnFilters()">
+                                            <span class="sortable" onclick="sortStockTable('category')">Kategori <i
+                                                    class="fas fa-sort"></i></span>
+                                            <input type="text" class="column-filter" id="filterCategory"
+                                                placeholder="Filtrele..." oninput="applyColumnFilters()">
                                         </div>
                                     </th>
                                     <th class="col-material">
                                         <div class="th-content">
-                                            <span class="sortable" onclick="sortStockTable('itemName')">Malzeme <i class="fas fa-sort"></i></span>
-                                            <input type="text" class="column-filter" id="filterMaterial" placeholder="Filtrele..." oninput="applyColumnFilters()">
+                                            <span class="sortable" onclick="sortStockTable('itemName')">Malzeme <i
+                                                    class="fas fa-sort"></i></span>
+                                            <input type="text" class="column-filter" id="filterMaterial"
+                                                placeholder="Filtrele..." oninput="applyColumnFilters()">
                                         </div>
                                     </th>
                                     <th class="col-size">
                                         <div class="th-content">
                                             <span>Beden/Özellik</span>
-                                            <input type="text" class="column-filter" id="filterSize" placeholder="Filtrele..." oninput="applyColumnFilters()">
+                                            <input type="text" class="column-filter" id="filterSize"
+                                                placeholder="Filtrele..." oninput="applyColumnFilters()">
                                         </div>
                                     </th>
                                     <th class="col-number">
                                         <div class="th-content">
-                                            <span class="sortable" onclick="sortStockTable('minStock')">Asgari Stok <i class="fas fa-sort"></i></span>
+                                            <span class="sortable" onclick="sortStockTable('minStock')">Asgari Stok <i
+                                                    class="fas fa-sort"></i></span>
                                         </div>
                                     </th>
                                     <th class="col-number">
                                         <div class="th-content">
-                                            <span class="sortable" onclick="sortStockTable('remaining')">Kalan <i class="fas fa-sort"></i></span>
+                                            <span class="sortable" onclick="sortStockTable('remaining')">Kalan <i
+                                                    class="fas fa-sort"></i></span>
                                         </div>
                                     </th>
                                     <th class="col-number">
                                         <div class="th-content">
-                                            <span class="sortable" onclick="sortStockTable('totalEntry')">Giriş <i class="fas fa-sort"></i></span>
+                                            <span class="sortable" onclick="sortStockTable('totalEntry')">Giriş <i
+                                                    class="fas fa-sort"></i></span>
                                         </div>
                                     </th>
                                     <th class="col-number">
                                         <div class="th-content">
-                                            <span class="sortable" onclick="sortStockTable('totalExit')">Çıkış <i class="fas fa-sort"></i></span>
+                                            <span class="sortable" onclick="sortStockTable('totalExit')">Çıkış <i
+                                                    class="fas fa-sort"></i></span>
                                         </div>
                                     </th>
                                     <th class="col-note">Durum</th>
@@ -335,7 +346,7 @@
                         <button class="export-btn" onclick="exportToExcel()">
                             <i class="fas fa-file-excel"></i> Excel'e Aktar
                         </button>
-                                                <div class="search-box">
+                        <div class="search-box">
                             <i class="fas fa-search"></i>
                             <input type="text" id="listSearch" placeholder="İşlem ara...">
                         </div>
@@ -434,7 +445,7 @@
         </main>
     </div>
 
-        <!-- Edit Stock Modal -->
+    <!-- Edit Stock Modal -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
