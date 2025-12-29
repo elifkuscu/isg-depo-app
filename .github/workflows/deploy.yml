@@ -25,12 +25,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Create config.js from Secrets
+        env:
+          API_CREDENTIALS: ${{ secrets.APP_CREDENTIALS_JSON }}
         run: |
-          echo "const ADMIN_USERS = ${{ secrets.APP_CREDENTIALS_JSON }};" > config.js
-          # Fallback if secret is empty (prevents crash, allows site to load but login fails)
-          if [ -z "${{ secrets.APP_CREDENTIALS_JSON }}" ]; then
-            echo "const ADMIN_USERS = []; // Credentials missing in Secrets" > config.js
-          fi
+          echo "const ADMIN_USERS = $API_CREDENTIALS;" > config.js
+          
+          # Validation (optional debug step)
+          cat config.js
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
