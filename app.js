@@ -369,14 +369,25 @@ function setupEventListeners() {
 }
 
 // ===== Authentication =====
-function handleLogin(e) {
+// SHA-256 hash fonksiyonu
+async function hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function handleLogin(e) {
     e.preventDefault();
 
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
     const rememberMe = document.getElementById('rememberMe').checked;
 
-    const user = ADMIN_USERS.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === password);
+    // Şifreyi hashle ve karşılaştır
+    const hashedPassword = await hashPassword(password);
+    const user = ADMIN_USERS.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === hashedPassword);
 
     if (user) {
         currentUser = username;
