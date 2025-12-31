@@ -84,6 +84,18 @@
                 <div class="nav-item" data-page="yillik-analiz">
                     <span>Yıllık Analiz</span>
                 </div>
+                <div class="nav-divider"></div>
+                <div class="nav-item nav-backup" onclick="exportAllData()">
+                    <i class="fas fa-download"></i>
+                    <span>Verileri Yedekle</span>
+                </div>
+                <div class="nav-item nav-backup">
+                    <label style="cursor: pointer; display: flex; align-items: center; gap: 8px; width: 100%;">
+                        <i class="fas fa-upload"></i>
+                        <span>Yedekten Geri Yükle</span>
+                        <input type="file" accept=".json" style="display: none;" onchange="importAllData(this.files[0])">
+                    </label>
+                </div>
             </nav>
             <div class="sidebar-footer">
                 <div class="user-info">

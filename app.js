@@ -896,9 +896,6 @@ function handleCSVUpload(event) {
             
             console.log('Eklenen:', addedCount, 'Atlanan:', skippedCount);
             
-            // LocalStorage'a kaydet
-            saveToLocalStorage();
-            
             // Dropdown'ları güncelle
             populateCategoryDropdowns();
             
@@ -2310,3 +2307,89 @@ function exportAnalysisReport() {
 // Make functions globally available
 window.updateAnalysisCharts = updateAnalysisCharts;
 window.exportAnalysisReport = exportAnalysisReport;
+
+
+// ===== Veri Yedekleme ve Geri Yükleme =====
+
+// Tüm verileri JSON olarak dışa aktar
+function exportAllData() {
+    const data = {
+        exportDate: new Date().toISOString(),
+        version: '2.0',
+        stock: getStock(),
+        transactions: getTransactions()
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `isg-depo-yedek-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast('Veriler başarıyla dışa aktarıldı!', 'success');
+}
+
+// JSON dosyasından verileri içe aktar
+function importAllData(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            
+            if (!data.stock || !data.transactions) {
+                showToast('Geçersiz yedek dosyası!', 'error');
+                return;
+            }
+            
+            // Mevcut verileri yedekle
+            const currentStock = getStock();
+            const currentTransactions = getTransactions();
+            
+            // Onay iste
+            if (!confirm(`Bu işlem mevcut verilerin üzerine yazacak!\n\nMevcut: ${Object.keys(currentStock).length} ürün, ${currentTransactions.length} işlem\nYedek: ${Object.keys(data.stock).length} ürün, ${data.transactions.length} işlem\n\nDevam etmek istiyor musunuz?`)) {
+                return;
+            }
+            
+            // Verileri geri yükle
+            localStorage.setItem('isg_stock_v2', JSON.stringify(data.stock));
+            localStorage.setItem('isg_transactions', JSON.stringify(data.transactions));
+            
+            showToast('Veriler başarıyla geri yüklendi! Sayfa yenileniyor...', 'success');
+            
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+            
+        } catch (error) {
+            console.error('Import error:', error);
+            showToast('Dosya okunamadı! Geçerli bir JSON dosyası seçin.', 'error');
+        }
+    };
+    reader.readAsText(file);
+}
+
+// Otomatik yedekleme (her 24 saatte bir localStorage'a son yedek zamanını kaydet)
+function checkAutoBackupReminder() {
+    const lastBackup = localStorage.getItem('isg_lastBackup');
+    const now = Date.now();
+    const oneWeek = 7 * 24 * 60 * 60 * 1000;
+    
+    if (!lastBackup || (now - parseInt(lastBackup)) > oneWeek) {
+        // 1 hafta geçmişse hatırlat
+        setTimeout(() => {
+            if (confirm('Son yedeklemenizin üzerinden 1 hafta geçti.\n\nVerilerinizi yedeklemek ister misiniz?')) {
+                exportAllData();
+                localStorage.setItem('isg_lastBackup', now.toString());
+            }
+        }, 3000);
+    }
+}
+
+// Sayfa yüklendiğinde yedekleme hatırlatıcısını kontrol et
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(checkAutoBackupReminder, 5000);
+});

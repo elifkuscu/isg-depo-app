@@ -362,6 +362,28 @@ body {
     font-weight: 600;
 }
 
+.nav-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 12px 0;
+}
+
+.nav-backup {
+    font-size: 13px;
+    padding: 10px 16px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.nav-backup i {
+    width: 20px;
+    margin-right: 8px;
+}
+
+.nav-backup:hover {
+    color: rgba(255, 255, 255, 1);
+    background: rgba(255, 255, 255, 0.08);
+}
+
 .nav-item-icon {
     width: 42px;
     height: 42px;
