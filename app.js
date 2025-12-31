@@ -199,6 +199,8 @@ function initializeApp() {
     if (savedUser) {
         currentUser = savedUser;
         showDashboard();
+        // Firebase'den verileri senkronize et (giriş yapıldıysa)
+        initializeFirebaseSync();
     } else {
         // Kayıtlı kullanıcı bilgilerini yükle
         loadSavedCredentials();
@@ -221,6 +223,43 @@ function initializeApp() {
     
     // Initialize theme
     initializeTheme();
+}
+
+// Firebase real-time senkronizasyonu başlat
+function initializeFirebaseSync() {
+    if (typeof listenToStockChanges === 'function') {
+        // Stok değişikliklerini dinle
+        listenToStockChanges((firebaseStock) => {
+            const localStock = getStock();
+            // Firebase'den gelen veri daha yeniyse güncelle
+            if (JSON.stringify(firebaseStock) !== JSON.stringify(localStock)) {
+                localStorage.setItem('isg_stock_v2', JSON.stringify(firebaseStock));
+                console.log('Stock updated from Firebase');
+                // UI'ı güncelle
+                if (currentPage === 'kalan-stok') {
+                    renderStockTable();
+                }
+                updateStats();
+            }
+        });
+        
+        // İşlem değişikliklerini dinle
+        listenToTransactionChanges((firebaseTransactions) => {
+            localStorage.setItem('isg_transactions', JSON.stringify(firebaseTransactions));
+            console.log('Transactions updated from Firebase');
+            // UI'ı güncelle
+            if (currentPage === 'envanter-listesi') {
+                renderTransactionTable();
+            } else if (currentPage === 'envanter-giris') {
+                renderRecentEntries();
+            } else if (currentPage === 'envanter-cikis') {
+                renderRecentExits();
+            }
+            updateStats();
+        });
+        
+        console.log('Firebase real-time sync initialized');
+    }
 }
 
 function initializeStockData() {
@@ -256,6 +295,10 @@ function getStock() {
 
 function saveStock(stock) {
     localStorage.setItem('isg_stock_v2', JSON.stringify(stock));
+    // Firebase'e de kaydet
+    if (typeof saveStockToFirebase === 'function') {
+        saveStockToFirebase(stock);
+    }
 }
 
 function getTransactions() {
@@ -266,6 +309,10 @@ function saveTransaction(transaction) {
     const transactions = getTransactions();
     transactions.unshift(transaction);
     localStorage.setItem('isg_transactions', JSON.stringify(transactions));
+    // Firebase'e de kaydet
+    if (typeof saveTransactionToFirebase === 'function') {
+        saveTransactionToFirebase(transaction);
+    }
 }
 
 function setupEventListeners() {
@@ -1601,6 +1648,11 @@ function deleteTransaction(transactionId) {
     // Remove transaction from list
     const updatedTransactions = transactions.filter(t => t.id !== transactionId);
     localStorage.setItem('isg_transactions', JSON.stringify(updatedTransactions));
+    
+    // Firebase'den de sil
+    if (typeof deleteTransactionFromFirebase === 'function') {
+        deleteTransactionFromFirebase(transactionId);
+    }
 
     showToast('İşlem silindi ve stok güncellendi!', 'success');
 
