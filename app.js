@@ -368,7 +368,21 @@ function setupEventListeners() {
     }
 }
 
-// ===== Authentication =====
+// ===== Authentication & Security =====
+
+// Güvenlik sabitleri
+const SECURITY_CONFIG = {
+    MAX_LOGIN_ATTEMPTS: 5,          // Maksimum hatalı giriş denemesi
+    LOCKOUT_DURATION: 15 * 60 * 1000, // Kilitleme süresi (15 dakika)
+    SESSION_TIMEOUT: 30 * 60 * 1000,  // Oturum zaman aşımı (30 dakika)
+    MIN_PASSWORD_LENGTH: 8
+};
+
+// Hatalı giriş sayacı
+let loginAttempts = parseInt(localStorage.getItem('isg_loginAttempts') || '0');
+let lockoutUntil = parseInt(localStorage.getItem('isg_lockoutUntil') || '0');
+let lastActivity = Date.now();
+
 // SHA-256 hash fonksiyonu
 async function hashPassword(password) {
     const encoder = new TextEncoder();
@@ -378,36 +392,123 @@ async function hashPassword(password) {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// Hesap kilitli mi kontrol et
+function isAccountLocked() {
+    if (lockoutUntil > Date.now()) {
+        const remainingTime = Math.ceil((lockoutUntil - Date.now()) / 60000);
+        return { locked: true, remainingMinutes: remainingTime };
+    }
+    // Kilitleme süresi dolmuşsa sıfırla
+    if (lockoutUntil > 0 && lockoutUntil <= Date.now()) {
+        loginAttempts = 0;
+        lockoutUntil = 0;
+        localStorage.setItem('isg_loginAttempts', '0');
+        localStorage.setItem('isg_lockoutUntil', '0');
+    }
+    return { locked: false };
+}
+
+// Hatalı giriş kaydet
+function recordFailedLogin() {
+    loginAttempts++;
+    localStorage.setItem('isg_loginAttempts', loginAttempts.toString());
+    
+    if (loginAttempts >= SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS) {
+        lockoutUntil = Date.now() + SECURITY_CONFIG.LOCKOUT_DURATION;
+        localStorage.setItem('isg_lockoutUntil', lockoutUntil.toString());
+        return { locked: true, remainingMinutes: Math.ceil(SECURITY_CONFIG.LOCKOUT_DURATION / 60000) };
+    }
+    
+    return { locked: false, attemptsLeft: SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS - loginAttempts };
+}
+
+// Başarılı giriş - sayaçları sıfırla
+function recordSuccessfulLogin() {
+    loginAttempts = 0;
+    lockoutUntil = 0;
+    localStorage.setItem('isg_loginAttempts', '0');
+    localStorage.setItem('isg_lockoutUntil', '0');
+    lastActivity = Date.now();
+    localStorage.setItem('isg_lastActivity', lastActivity.toString());
+}
+
+// Oturum zaman aşımı kontrolü
+function checkSessionTimeout() {
+    if (!currentUser) return;
+    
+    const lastActivityTime = parseInt(localStorage.getItem('isg_lastActivity') || '0');
+    if (Date.now() - lastActivityTime > SECURITY_CONFIG.SESSION_TIMEOUT) {
+        handleLogout();
+        showToast('Oturum zaman aşımına uğradı. Lütfen tekrar giriş yapın.', 'warning');
+    }
+}
+
+// Aktivite güncelle
+function updateActivity() {
+    if (currentUser) {
+        lastActivity = Date.now();
+        localStorage.setItem('isg_lastActivity', lastActivity.toString());
+    }
+}
+
+// Oturum kontrolü için interval
+setInterval(checkSessionTimeout, 60000); // Her dakika kontrol et
+
+// Kullanıcı aktivitesini izle
+document.addEventListener('click', updateActivity);
+document.addEventListener('keypress', updateActivity);
+
 async function handleLogin(e) {
     e.preventDefault();
+
+    // Hesap kilitli mi kontrol et
+    const lockStatus = isAccountLocked();
+    if (lockStatus.locked) {
+        loginError.textContent = `Çok fazla hatalı deneme! ${lockStatus.remainingMinutes} dakika sonra tekrar deneyin.`;
+        loginError.classList.add('show');
+        return;
+    }
 
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
     const rememberMe = document.getElementById('rememberMe').checked;
+
+    // Temel doğrulama
+    if (!username || !password) {
+        loginError.textContent = 'Kullanıcı adı ve şifre gerekli!';
+        loginError.classList.add('show');
+        return;
+    }
 
     // Şifreyi hashle ve karşılaştır
     const hashedPassword = await hashPassword(password);
     const user = ADMIN_USERS.find(u => u.username.toLowerCase() === username.toLowerCase() && u.password === hashedPassword);
 
     if (user) {
+        recordSuccessfulLogin();
         currentUser = username;
         localStorage.setItem('isg_currentUser', username);
         
-        // Beni Hatırla seçiliyse kullanıcı bilgilerini kaydet
+        // Beni Hatırla seçiliyse sadece kullanıcı adını kaydet (şifreyi KAYDETME!)
         if (rememberMe) {
             localStorage.setItem('isg_savedUsername', username);
-            localStorage.setItem('isg_savedPassword', password);
             localStorage.setItem('isg_rememberMe', 'true');
         } else {
             localStorage.removeItem('isg_savedUsername');
-            localStorage.removeItem('isg_savedPassword');
             localStorage.removeItem('isg_rememberMe');
         }
+        // Şifreyi asla localStorage'da tutma!
+        localStorage.removeItem('isg_savedPassword');
         
         loginError.classList.remove('show');
         showDashboard();
     } else {
-        loginError.textContent = 'Kullanıcı adı veya şifre hatalı!';
+        const failResult = recordFailedLogin();
+        if (failResult.locked) {
+            loginError.textContent = `Çok fazla hatalı deneme! ${failResult.remainingMinutes} dakika sonra tekrar deneyin.`;
+        } else {
+            loginError.textContent = `Kullanıcı adı veya şifre hatalı! (${failResult.attemptsLeft} deneme kaldı)`;
+        }
         loginError.classList.add('show');
     }
 }
@@ -428,12 +529,13 @@ function handleLogout() {
 function loadSavedCredentials() {
     if (localStorage.getItem('isg_rememberMe') === 'true') {
         const savedUsername = localStorage.getItem('isg_savedUsername');
-        const savedPassword = localStorage.getItem('isg_savedPassword');
         
         if (savedUsername) document.getElementById('username').value = savedUsername;
-        if (savedPassword) document.getElementById('password').value = savedPassword;
+        // Şifre artık kaydedilmiyor - güvenlik için
         document.getElementById('rememberMe').checked = true;
     }
+    // Eski kayıtlı şifreleri temizle (güvenlik için)
+    localStorage.removeItem('isg_savedPassword');
 }
 
 function showDashboard() {
