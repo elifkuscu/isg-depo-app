@@ -39,6 +39,7 @@ const INITIAL_STOCK_DATA = [
     { category: 'Kişisel Koruyucu Donanımlar', colorClass: 'cat-3', item: 'Maske - Toz (FFP2)', size: '-', minStock: 20, initialStock: 201 },
     { category: 'Kişisel Koruyucu Donanımlar', colorClass: 'cat-3', item: 'Maske - Gaz (Karbon)', size: '-', minStock: 0, initialStock: 0 },
     { category: 'Kişisel Koruyucu Donanımlar', colorClass: 'cat-3', item: 'Maske - Cerrahi', size: '-', minStock: 0, initialStock: 0 },
+    { category: 'Kişisel Koruyucu Donanımlar', colorClass: 'cat-3', item: 'Filtreli Maske', size: '-', minStock: 5, initialStock: 0 },
     { category: 'Kişisel Koruyucu Donanımlar', colorClass: 'cat-3', item: 'Eldiven - Sponsa-11 ısı eldiveni çifti', size: '-', minStock: 2, initialStock: 10 },
     { category: 'Kişisel Koruyucu Donanımlar', colorClass: 'cat-3', item: 'Eldiven', size: '7 numara', minStock: 2, initialStock: 4 },
     { category: 'Kişisel Koruyucu Donanımlar', colorClass: 'cat-3', item: 'Eldiven', size: '8 numara', minStock: 2, initialStock: 7 },
