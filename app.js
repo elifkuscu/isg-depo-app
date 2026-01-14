@@ -717,10 +717,10 @@ document.addEventListener('submit', function(e) {
 function addNewInventoryItem() {
     const categorySelect = document.getElementById('newCategory');
     const newCategoryName = document.getElementById('newCategoryName');
-    const itemName = document.getElementById('newItemName');
-    const itemSize = document.getElementById('newItemSize');
-    const minStock = document.getElementById('newMinStock');
-    const initialStock = document.getElementById('newInitialStock');
+    const itemNameInput = document.getElementById('newItemName');
+    const itemSizeInput = document.getElementById('newItemSize');
+    const minStockInput = document.getElementById('newMinStock');
+    const initialStockInput = document.getElementById('newInitialStock');
     
     let category, colorClass;
     
@@ -740,29 +740,29 @@ function addNewInventoryItem() {
         colorClass = selectedOption.dataset.color || 'cat-1';
     }
     
-    if (!category || !itemName.value.trim()) {
+    if (!category || !itemNameInput.value.trim()) {
         showToast('Lütfen kategori ve malzeme adı girin!', 'error');
         return;
     }
+    
+    // Size boşsa '-' olarak ayarla
+    const sizeValue = itemSizeInput.value.trim() || '-';
     
     // Yeni envanter öğesi oluştur
     const newItem = {
         category: category,
         colorClass: colorClass,
-        item: itemName.value.trim(),
-        size: itemSize.value.trim() || '',
-        minStock: parseInt(minStock.value) || 3,
-        initialStock: parseInt(initialStock.value) || 0
+        item: itemNameInput.value.trim(),
+        size: sizeValue,
+        minStock: parseInt(minStockInput.value) || 3,
+        initialStock: parseInt(initialStockInput.value) || 0
     };
     
-    // Aynı ürün var mı kontrol et
-    const existingItem = INITIAL_STOCK_DATA.find(item => 
-        item.category === newItem.category && 
-        item.item === newItem.item && 
-        item.size === newItem.size
-    );
+    // Aynı ürün var mı kontrol et (stock objesinden)
+    const stock = getStock();
+    const stockKey = `${newItem.colorClass}_${newItem.item}_${newItem.size}`;
     
-    if (existingItem) {
+    if (stock[stockKey]) {
         showToast('Bu ürün zaten mevcut!', 'error');
         return;
     }
@@ -770,16 +770,13 @@ function addNewInventoryItem() {
     // INITIAL_STOCK_DATA'ya ekle
     INITIAL_STOCK_DATA.push(newItem);
     
-    // Stock'a ekle (getStock/saveStock kullanarak)
-    const stock = getStock();
-    const itemSize = newItem.size || '-';
-    const stockKey = `${newItem.colorClass}_${newItem.item}_${itemSize}`;
+    // Stock'a ekle
     stock[stockKey] = {
         id: Object.keys(stock).length,
         category: newItem.category,
         colorClass: newItem.colorClass,
         itemName: newItem.item,
-        size: itemSize,
+        size: newItem.size,
         minStock: newItem.minStock,
         initialStock: newItem.initialStock,
         totalEntry: 0,
