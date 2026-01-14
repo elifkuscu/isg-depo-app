@@ -1004,7 +1004,9 @@ function toggleSidebar() {
 function getCategories() {
     const categories = [];
     const seen = new Set();
-    INITIAL_STOCK_DATA.forEach(item => {
+    // Stock objesinden oku (yeni eklenen kategorileri de içerir)
+    const stock = getStock();
+    Object.values(stock).forEach(item => {
         if (!seen.has(item.category)) {
             seen.add(item.category);
             categories.push({ name: item.category, colorClass: item.colorClass });
@@ -1046,10 +1048,12 @@ function handleEntryCategoryChange(e) {
 
     if (colorClass) {
         itemSelect.disabled = false;
-        const items = INITIAL_STOCK_DATA.filter(item => item.colorClass === colorClass);
+        // Stock objesinden oku (yeni eklenen ürünleri de içerir)
+        const stock = getStock();
+        const items = Object.values(stock).filter(item => item.colorClass === colorClass);
         items.forEach(item => {
-            const displayName = item.size && item.size !== '-' ? `${item.item} (${item.size})` : item.item;
-            const value = `${item.item}|||${item.size}`;
+            const displayName = item.size && item.size !== '-' ? `${item.itemName} (${item.size})` : item.itemName;
+            const value = `${item.itemName}|||${item.size}`;
             itemSelect.add(new Option(displayName, value));
         });
     } else {
@@ -1084,10 +1088,12 @@ function handleExitCategoryChange(e) {
 
     if (colorClass) {
         itemSelect.disabled = false;
-        const items = INITIAL_STOCK_DATA.filter(item => item.colorClass === colorClass);
+        // Stock objesinden oku (yeni eklenen ürünleri de içerir)
+        const stock = getStock();
+        const items = Object.values(stock).filter(item => item.colorClass === colorClass);
         items.forEach(item => {
-            const displayName = item.size && item.size !== '-' ? `${item.item} (${item.size})` : item.item;
-            const value = `${item.item}|||${item.size}`;
+            const displayName = item.size && item.size !== '-' ? `${item.itemName} (${item.size})` : item.itemName;
+            const value = `${item.itemName}|||${item.size}`;
             itemSelect.add(new Option(displayName, value));
         });
     } else {
