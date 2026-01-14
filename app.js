@@ -772,21 +772,26 @@ function addNewInventoryItem() {
     
     // Stock'a ekle (getStock/saveStock kullanarak)
     const stock = getStock();
-    const stockKey = `${newItem.colorClass}_${newItem.item}_${newItem.size}`;
+    const itemSize = newItem.size || '-';
+    const stockKey = `${newItem.colorClass}_${newItem.item}_${itemSize}`;
     stock[stockKey] = {
         id: Object.keys(stock).length,
         category: newItem.category,
         colorClass: newItem.colorClass,
         itemName: newItem.item,
-        size: newItem.size,
+        size: itemSize,
         minStock: newItem.minStock,
         initialStock: newItem.initialStock,
-        totalEntry: newItem.initialStock,
+        totalEntry: 0,
         totalExit: 0
     };
     saveStock(stock);
     
-    // Dropdown'ları güncelle
+    // Dropdown'ları yeniden oluştur (mevcut seçenekleri temizle ve yeniden doldur)
+    const entryCategory = document.getElementById('entryCategory');
+    const exitCategory = document.getElementById('exitCategory');
+    entryCategory.innerHTML = '<option value="">Kategori Seçin</option>';
+    exitCategory.innerHTML = '<option value="">Kategori Seçin</option>';
     populateCategoryDropdowns();
     
     // Formu temizle
@@ -1028,6 +1033,14 @@ function getCategories() {
 function populateCategoryDropdowns() {
     const entryCategory = document.getElementById('entryCategory');
     const exitCategory = document.getElementById('exitCategory');
+
+    // Mevcut seçenekleri temizle (ilk option hariç)
+    while (entryCategory.options.length > 1) {
+        entryCategory.remove(1);
+    }
+    while (exitCategory.options.length > 1) {
+        exitCategory.remove(1);
+    }
 
     const categories = getCategories();
     categories.forEach(category => {
