@@ -264,11 +264,11 @@ function initializeFirebaseSync() {
 }
 
 function initializeStockData() {
-    // Her zaman INITIAL_STOCK_DATA'dan yeniden oluştur
-    // Mevcut giriş/çıkış verilerini koru
+    // Mevcut verileri al
     const existingData = localStorage.getItem('isg_stock_v2');
     const existingStock = existingData ? JSON.parse(existingData) : {};
     
+    // INITIAL_STOCK_DATA'dan stock oluştur
     const stock = {};
     INITIAL_STOCK_DATA.forEach((item, index) => {
         const key = `${item.colorClass}_${item.item}_${item.size}`;
@@ -279,7 +279,7 @@ function initializeStockData() {
             category: item.category,
             colorClass: item.colorClass,
             itemName: item.item,
-            size: item.size,
+            size: item.size || '-',
             minStock: item.minStock,
             initialStock: item.initialStock,
             // Mevcut giriş/çıkış verilerini koru, yoksa 0
@@ -287,6 +287,14 @@ function initializeStockData() {
             totalExit: existing ? existing.totalExit : 0
         };
     });
+    
+    // Mevcut stock'taki ekstra ürünleri de koru (kullanıcının eklediği ürünler)
+    Object.keys(existingStock).forEach(key => {
+        if (!stock[key]) {
+            stock[key] = existingStock[key];
+        }
+    });
+    
     localStorage.setItem('isg_stock_v2', JSON.stringify(stock));
 }
 
